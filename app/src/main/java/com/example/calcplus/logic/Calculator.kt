@@ -8,7 +8,7 @@ data class CalculatorState(
     val firstnum : Double ?= null,
     val hasError: Boolean = false,
     val operator: String ?= null,
-
+    val expression: String = "",
 )
 fun calculate(
     first: Double,
