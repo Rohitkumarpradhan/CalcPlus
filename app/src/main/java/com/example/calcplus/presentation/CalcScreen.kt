@@ -60,24 +60,25 @@ fun CalcScreen(
             .clip(RoundedCornerShape(50f))
             .background(color = Color.LightGray)) {
             Text(
-                text = buildString {
-                    if (viewModel.state.firstnum != null) {
-                        append(formatRes(viewModel.state.firstnum!!))
-                        append(" ")
-                    }
-
-                    if (viewModel.state.operator != null) {
-                        append(viewModel.state.operator)
-                        append(" ")
-                    }
-
-                    if (viewModel.state.firstnum != null &&
-                        viewModel.state.operator != null &&
-                        viewModel.state.display != "0"
-                    ) {
-                        append(viewModel.state.display)
-                    }
-                },
+//                text = buildString {
+//                    if (viewModel.state.firstnum != null) {
+//                        append(formatRes(viewModel.state.firstnum!!))
+//                        append(" ")
+//                    }
+//
+//                    if (viewModel.state.operator != null) {
+//                        append(viewModel.state.operator)
+//                        append(" ")
+//                    }
+//
+//                    if (viewModel.state.firstnum != null &&
+//                        viewModel.state.operator != null &&
+//                        viewModel.state.display != "0"
+//                    ) {
+//                        append(viewModel.state.display)
+//                    }
+//                },
+                text= viewModel.state.expression,
                 fontSize = 24.sp,
                 textAlign = TextAlign.End,
                 modifier = Modifier

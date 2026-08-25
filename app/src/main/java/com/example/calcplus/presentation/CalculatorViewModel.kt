@@ -41,69 +41,107 @@ class CalculatorViewModel : ViewModel(){
 
 
 
-    fun setOperator(newOperator : String){
-        if(state.firstnum == null){
-            state = state.copy(
-                operator = newOperator,
-                firstnum = state.display.toDouble(),
+    fun setOperator(newOperator: String) {
+
+        if (state.hasError) return
+
+        val currentExpression = state.expression
+
+        state = if (currentExpression.isEmpty()) {
+            state.copy(
+                expression = state.display + " " + newOperator + " ",
                 display = "0"
-
             )
-
-        }else{
-            val  first = state.firstnum
-
-            if(first != null && state.operator != null){
-                val secondNum = state.display.toDouble()
-                val res = calculate(first , secondNum , state.operator!!)
-                if(res != null){
-                    state = state.copy(
-                        firstnum = res,
-                        operator = newOperator,
-                        display = "0"
-                    )
-                }else{
-                    state = state.copy(
-                        display = "Error",
-                        hasError = true
-                    )
-                }
-            }
+        } else {
+            state.copy(
+                expression = currentExpression + state.display + " " + newOperator + " ",
+                display = "0"
+            )
         }
     }
 
 
     fun calculateResult() {
 
-        val first = state.firstnum
-        val currentOperator = state.operator
+        if (state.hasError) return
 
-        if (first != null && currentOperator != null) {
+        var expression = state.expression + state.display
 
-            val second = state.display.toDouble()
+        expression = expression.trim()
 
-            val result = calculate(
-                first,
-                second,
-                currentOperator
-            )
+        val parts = expression.split(" ")
 
-            if (result != null) {
+        if (parts.size < 3) return
 
-                state = state.copy(
-                    display = formatRes(result),
-                    firstnum = null,
-                    operator = null
-                )
+        val numbers = mutableListOf<Double>()
+        val operators = mutableListOf<String>()
+
+        numbers.add(parts[0].toDouble())
+
+        var i = 1
+
+        while (i < parts.size) {
+            operators.add(parts[i])
+            numbers.add(parts[i + 1].toDouble())
+            i += 2
+        }
+
+        // First: × and ÷
+        var index = 0
+
+        while (index < operators.size) {
+
+            if (operators[index] == "x" || operators[index] == "/") {
+
+                val first = numbers[index]
+                val second = numbers[index + 1]
+
+                val result = if (operators[index] == "x") {
+                    first * second
+                } else {
+                    if (second == 0.0) {
+                        state = state.copy(
+                            display = "Error",
+                            hasError = true
+                        )
+                        return
+                    }
+
+                    first / second
+                }
+
+                numbers[index] = result
+                numbers.removeAt(index + 1)
+                operators.removeAt(index)
 
             } else {
-
-                state = state.copy(
-                    display = "Error",
-                    hasError = true
-                )
+                index++
             }
         }
+
+        // Then: + and -
+        var result = numbers[0]
+
+        for (j in operators.indices) {
+
+            when (operators[j]) {
+
+                "+" -> {
+                    result += numbers[j + 1]
+                }
+
+                "-" -> {
+                    result -= numbers[j + 1]
+                }
+            }
+        }
+
+        state = state.copy(
+            display = formatRes(result),
+            expression = "",
+            firstnum = null,
+            operator = null
+        )
     }
 
 
@@ -136,15 +174,40 @@ class CalculatorViewModel : ViewModel(){
         }
     }
 
-    fun percentage(){
-        if(state.display == "0" || state.hasError){
-            return
-        }else{
-            state = state.copy(
-                display = (state.display.toDouble()/100).toString()
+    fun percentage() {
 
-            )
+        if (state.hasError) return
+
+        val current = state.display.toDouble()
+
+        // If we already have an expression like "12 - "
+        if (state.expression.isNotEmpty()) {
+
+            val parts = state.expression.trim().split(" ")
+
+            if (parts.size >= 2) {
+
+                val first = parts[0].toDouble()
+                val operator = parts[1]
+
+                val percentageValue = when (operator) {
+                    "+", "-" -> first * current / 100
+                    "x", "/" -> current / 100
+                    else -> current / 100
+                }
+
+                state = state.copy(
+                    display = formatRes(percentageValue)
+                )
+
+                return
+            }
         }
+
+        // Normal standalone percentage
+        state = state.copy(
+            display = formatRes(current / 100)
+        )
     }
 
     fun toggleSign(){
